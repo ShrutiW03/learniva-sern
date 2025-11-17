@@ -1,0 +1,336 @@
+/* --- Learniva: Interactive Galaxy Theme --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Orbitron:wght@700&display=swap');
+
+/* 1. CSS Variables for the Galaxy Palette */
+:root {
+    --bg-deep-space: #0f0c29;
+    --bg-nebula-start: #24243e;
+    --bg-nebula-end: #302b63;
+    --accent-magenta: #ff00cc;
+    --accent-purple: #9c27b0;
+    --text-primary: #EAE6FF;
+    --text-secondary: #c7c1e0;
+    --glass-bg: rgba(22, 18, 53, 0.5);
+    --glass-border: rgba(144, 115, 255, 0.3);
+
+    --font-heading: 'Orbitron', sans-serif;
+    --font-body: 'Poppins', sans-serif;
+}
+
+/* 2. Animated Gradient Background */
+body {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: linear-gradient(-45deg, var(--bg-deep-space), var(--bg-nebula-start), var(--bg-nebula-end), var(--bg-deep-space));
+    background-size: 400% 400%;
+    animation: gradient-animation 15s ease infinite;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* 3. Typography & Main Layout */
+.app-title, .output-title {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 2.8rem;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px var(--accent-purple);
+}
+
+.app-slogan {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+h5 {
+    color: var(--accent-magenta);
+    font-family: var(--font-body);
+    font-weight: 600;
+}
+
+/* 4. Glassmorphism UI Elements */
+.custom-form, .generated-content-box {
+    background: var(--glass-bg);
+    border-radius: 16px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    padding: 30px !important;
+    transition: all 0.3s ease;
+}
+
+.custom-form:hover, .generated-content-box:hover {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(144, 115, 255, 0.5);
+}
+
+/* 5. Interactive Input Fields */
+.form-control, .form-select {
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 12px 18px;
+}
+
+.form-control::placeholder {
+    color: var(--text-secondary);
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: rgba(0, 0, 0, 0.3);
+    color: var(--text-primary);
+    border-color: var(--accent-magenta);
+    box-shadow: 0 0 0 0.25rem rgba(255, 0, 204, 0.2);
+}
+
+/* 6. Glowing, Gradient Buttons */
+.custom-btn {
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 12px 28px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-primary {
+    background-image: linear-gradient(to right, var(--accent-purple), var(--accent-magenta));
+    background-size: 200% auto;
+    color: white;
+}
+.btn-primary:hover {
+    background-position: right center;
+    box-shadow: 0 0 20px var(--accent-magenta);
+    transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+    border: 2px solid var(--accent-purple);
+    color: var(--text-primary);
+    background-color: transparent;
+}
+.btn-outline-secondary:hover {
+    background-color: var(--accent-purple);
+    color: white;
+    box-shadow: 0 0 15px var(--accent-purple);
+}
+
+/* 7. Themed Course Content */
+.list-group-item {
+    background-color: transparent !important;
+    border: none !important;
+    border-left: 3px solid var(--accent-purple) !important;
+    padding-left: 1.5rem !important;
+}
+
+a {
+    color: var(--accent-magenta);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+a:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+.badge.bg-secondary {
+    background-color: var(--accent-purple) !important;
+}
+
+/* 8. Themed Progress Bar & Modals */
+.progress {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar.bg-success {
+    background-color: var(--accent-purple) !important;
+    background-image: linear-gradient(to right, var(--accent-purple), var(--accent-magenta));
+}
+
+.modal-content {
+    background: var(--bg-nebula-end);
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+}
+.modal-header {
+    border-bottom: 1px solid var(--glass-border);
+}
+/* Add this to the end of your style.css file */
+
+/* Fix for form labels */
+.form-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Improve readability of paragraph text */
+.list-group-item p, .text-muted {
+    color: var(--text-secondary) !important;
+}
+
+/* Add this to the end of your style.css file */
+
+/* Fix for form labels and titles */
+.form-label {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+#loginFormSection h2, #signupFormSection h2 {
+    color: var(--text-secondary);
+}
+
+/* Improve readability of paragraph text */
+.list-group-item p, .text-muted, .list-group-item li {
+    color: var(--text-secondary) !important;
+}
+
+/* Fix for the green login button */
+.btn-success {
+    background-image: linear-gradient(to right, var(--accent-purple), var(--accent-magenta));
+    background-size: 200% auto;
+    color: white;
+}
+.btn-success:hover {
+    background-position: right center;
+    box-shadow: 0 0 20px var(--accent-magenta);
+    transform: translateY(-2px);
+}
+
+/* --- FIX FOR SERN MIGRATION --- */
+
+/* 1. Fix for unreadable prerequisites & project boxes */
+.bg-light {
+    background: var(--glass-bg) !important; /* Use your glassy background */
+    border: 1px solid var(--glass-border) !important;
+}
+
+/* Make sure list items inside those boxes are readable */
+.bg-light li, .generated-content-box li {
+    color: var(--text-primary) !important; /* Use your main light text */
+}
+
+/* 2. Fix for unreadable quiz text */
+.modal-body, .modal-body .form-check-label, .modal-body strong {
+    color: var(--text-primary) !important; /* Use your main light text */
+}
+
+/* 3. Fix for progress bar */
+.progress-bar {
+    background-color: var(--accent-purple) !important;
+    background-image: linear-gradient(to right, var(--accent-purple), var(--accent-magenta)) !important;
+    color: var(--text-primary) !important; /* Make percentage text readable */
+    font-weight: 600;
+}
+
+/* --- NEW Animation for Module "Blocs" --- */
+
+@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .module-col {
+    /* Apply the animation */
+    animation: fadeInUp 0.5s ease-out forwards;
+    /* This ensures the cards look right in a grid */
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .list-group-item {
+      /* This makes your "blocs" fill the height of the column */
+      height: 100%;
+  }
+
+  /* --- NEW INTERACTIVE TAB STYLES --- */
+
+/* Style the tab buttons bar */
+.nav-tabs {
+    border-bottom: 2px solid var(--glass-border) !important;
+  }
+  
+  /* Style each individual tab button */
+  .nav-tabs .nav-link {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-secondary); /* Inactive color */
+    background: none !important;
+    border: none !important;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Style the tab button on HOVER */
+  .nav-tabs .nav-link:hover {
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent-purple) !important;
+  }
+  
+  /* Style the ACTIVE tab button */
+  .nav-tabs .nav-link.active {
+    color: var(--accent-magenta) !important;
+    border-bottom: 2px solid var(--accent-magenta) !important;
+    text-shadow: 0 0 5px var(--accent-magenta);
+  }
+  
+  /* Style the content area below the tabs */
+  .tab-content {
+    color: var(--text-primary);
+    padding-top: 1rem;
+  }
+  
+  /* Remove the "generated-content-box" padding, as the tabs have their own */
+  #generatedContent {
+    padding: 0 !important;
+  }
+  
+  /* Fix text and list colors inside the tabs */
+  .tab-pane li, .tab-pane p {
+     color: var(--text-secondary) !important;
+  }
+  .tab-pane .form-check-label {
+      color: var(--text-primary) !important;
+  }
+  
+  /* Fix for animation */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .tab-pane.active {
+    animation: fadeInUp 0.5s ease-out forwards;
+  }
+
+  /* --- Style for new weekly quiz button --- */
+.btn-outline-light.custom-btn {
+    border-color: var(--accent-purple);
+    color: var(--text-primary);
+}
+.btn-outline-light.custom-btn:hover {
+    background-color: var(--accent-purple);
+    color: white;
+    box-shadow: 0 0 15px var(--accent-purple);
+}
