@@ -37,7 +37,7 @@ const pool = mysql.createPool({
 });
 
 // =================================================================
-// --- CORE API ROUTES (NOW USING OPENROUTER) ---
+// --- CORE API ROUTES ---
 // =================================================================
 
 // ROUTE 1: Generate a course
@@ -47,8 +47,18 @@ app.post('/api/course/generate', async (req, res) => {
     const sanitizedGoals = learningGoals.replace(/"/g, '\\"').replace(/\n/g, ' ');
     const sanitizedKnowledge = existingKnowledge.replace(/"/g, '\\"').replace(/\n/g, ' ');
 
+    // --- DYNAMIC STYLE INSTRUCTION (Makes the AI smarter) ---
+    let styleInstruction = "Provide a balanced mix of videos, articles, and projects.";
+    if (learningStyle === 'Visual') {
+        styleInstruction = "Prioritize 'YouTube Video' and 'Interactive Tutorial' resources. The user learns best by seeing.";
+    } else if (learningStyle === 'Project-Based') {
+        styleInstruction = "Focus heavily on the 'projectIdea'. Make it the core part of the module. The user learns best by doing.";
+    } else if (learningStyle === 'Reading/Theoretical') {
+        styleInstruction = "Prioritize 'Official Documentation' and 'Article' resources. The user prefers deep reading.";
+    }
+
     const coursePrompt = `
-      You are a world-class curriculum designer and subject-matter expert. Your task is to generate a comprehensive, personalized, week-by-week course.
+      You are a world-class curriculum designer. Your task is to generate a comprehensive, personalized, week-by-week course.
 
       **USER PROFILE:**
       - **Topic:** "${topic}"
@@ -59,16 +69,22 @@ app.post('/api/course/generate', async (req, res) => {
       - **Existing Knowledge:** "${sanitizedKnowledge}"
 
       **PERSONALIZATION INSTRUCTIONS:**
-      1.  **Skill Level:** Adjust the starting point. For "Beginner", start with fundamentals. For "Advanced", dive into complex topics.
-      2.  **Learning Style:** - "Project-Based": Make the \`projectIdea\` for each module the main focus.
-          - "Visual": Include more links to "YouTube Video" and "Interactive Tutorial".
-          - "Reading/Theoretical": Include more links to "Official Documentation" and "Article".
-      3.  **Goals:** The modules MUST be structured to achieve the user's specific \`learningGoals\`.
+      1.  **Skill Level:** Adjust the starting point based on "${skillLevel}".
+      2.  **Learning Style:** ${styleInstruction}
+      3.  **Goals:** The modules MUST be structured to achieve the user's specific goals.
       4.  **Time:** The \`totalWeeks\` and \`estimatedHours\` per module must be realistic for the user's \`hoursPerWeek\`.
+
+      **CRITICAL INSTRUCTIONS FOR LINKS:**
+      Free AI models often invent fake URLs. DO NOT DO THIS.
+      1.  If you know a **100% real, permanent URL** (like "https://docs.python.org/3/"), use it.
+      2.  If you are not sure, use a **SEARCH URL** instead.
+          - For videos: "https://www.youtube.com/results?search_query=${topic.replace(/ /g, '+')}+[module_topic]"
+          - For articles: "https://www.google.com/search?q=${topic.replace(/ /g, '+')}+[module_topic]"
+      This ensures the user always gets a working link.
 
       **OUTPUT FORMAT (Strict JSON):**
       Your entire response must be ONLY the JSON object. Do not add any extra text like "Here is your course".
-      Your response must start with { and end with }. Ensure all resource URLs are real, valid, and relevant, not placeholders.
+      Your response must start with { and end with }.
 
       {
         "title": "A compelling, catchy title for the course",
@@ -95,12 +111,12 @@ app.post('/api/course/generate', async (req, res) => {
             "resources": [
               {
                 "title": "A specific, real resource title",
-                "url": "https://www.realsite.com/...",
+                "url": "https://www.youtube.com/results?search_query=...",
                 "type": "One of: 'YouTube Video', 'Official Documentation', 'Article', 'Interactive Tutorial', 'Book Recommendation'"
               },
               {
                 "title": "Another real resource title",
-                "url": "https://www.anothersite.com/...",
+                "url": "https://www.google.com/search?q=...",
                 "type": "Article"
               }
             ]
@@ -110,21 +126,22 @@ app.post('/api/course/generate', async (req, res) => {
     `;
 
     try {
-        // --- NEW: OpenRouter API Call ---
         const completion = await openrouter.chat.completions.create({
-            model: "mistralai/mistral-7b-instruct:free", // <-- THIS IS THE NEW, SMARTER MODEL
+            model: "mistralai/mistral-7b-instruct:free", // <-- STABLE FREE MODEL
             messages: [
                 { role: "system", content: "You are an expert curriculum designer. You MUST respond with ONLY the valid JSON object requested. Do not add any introductory text, conversation, or markdown ticks. Your response must start with { and end with }." },
                 { role: "user", content: coursePrompt }
             ]
         });
 
-        const rawText = completion.choices[0].message.content;
+        let rawText = completion.choices[0].message.content;
         
-        // --- Safely find the JSON in the response ---
+        // --- JSON CLEANER ---
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (!jsonMatch || !jsonMatch[0]) {
-            console.error("Raw AI Response:", rawText); // This will now log the bad response
+            console.error("Raw AI Response:", rawText);
             throw new Error("Could not find a valid JSON object in the AI's response.");
         }
         
@@ -187,21 +204,22 @@ app.post('/api/course/:courseId/quiz', async (req, res) => {
     `;
     
     try {
-        // --- NEW: OpenRouter API Call ---
         const completion = await openrouter.chat.completions.create({
-            model: "mistralai/mistral-7b-instruct:free", // <-- THIS IS THE NEW, SMARTER MODEL
+            model: "mistralai/mistral-7b-instruct:free", 
             messages: [
                 { role: "system", content: "You are a quiz generator. You MUST respond with ONLY the valid JSON object requested. Do not add any introductory text, conversation, or markdown ticks. Your response must start with { and end with }." },
                 { role: "user", content: prompt }
             ]
         });
         
-        const rawText = completion.choices[0].message.content;
+        let rawText = completion.choices[0].message.content;
         
-        // --- Safely find the JSON in the response ---
+        // --- JSON CLEANER ---
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (!jsonMatch || !jsonMatch[0]) {
-            console.error("Raw AI Response:", rawText); // This will now log the bad response
+            console.error("Raw AI Response:", rawText);
             throw new Error("Could not find a valid JSON object in the AI's response.");
         }
         
@@ -229,11 +247,9 @@ app.post('/api/course/:courseId/quiz', async (req, res) => {
     }
 });
 
-// --- ALL OTHER ROUTES (Auth, Progress, etc.) ARE UNCHANGED ---
+// --- OTHER ROUTES (Auth, Progress, etc.) ---
 
-// ROUTE 3: Submit the post-course quiz
 app.post('/api/course/:courseId/submit-quiz', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { courseId } = req.params;
     const { userId, answers, courseTopic, difficulty, quizType } = req.body;
     const topic = courseTopic || 'General Quiz';
@@ -251,22 +267,18 @@ app.post('/api/course/:courseId/submit-quiz', async (req, res) => {
         );
         res.json({ status: 'success', message: `Quiz submitted! You scored ${score} out of ${questionIds.length}.` });
     } catch (error) {
-        console.error("Error saving quiz result:", error);
-        res.status(500).json({ status: 'error', message: 'Failed to save your quiz score.' });
+        res.status(500).json({ status: 'error', message: 'Failed to save score.' });
     }
 });
 
-// ROUTE 4: Save a generated course
 app.post('/save-course', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { receivedData, generatedCourse, userId } = req.body;
     const { topic, skillLevel, learningGoals } = receivedData;
-    
     const durationString = receivedData.duration || generatedCourse.totalWeeks; 
     const duration = parseInt(durationString) || 0; 
 
-    if (!generatedCourse || !topic || !skillLevel || !learningGoals || !userId) {
-        return res.status(400).json({ status: 'error', message: 'Missing required course data.' });
+    if (!generatedCourse || !topic || !userId) {
+        return res.status(400).json({ status: 'error', message: 'Missing required data.' });
     }
     const generatedContentJson = JSON.stringify(generatedCourse);
     try {
@@ -276,26 +288,16 @@ app.post('/save-course', async (req, res) => {
         );
         res.json({ status: 'success', message: 'Course saved successfully!', courseId: result.insertId });
     } catch (error) {
-        console.error("Error saving course:", error);
-        res.status(500).json({ status: 'error', message: `Failed to save course: ${error.message}` });
+        res.status(500).json({ status: 'error', message: `Failed to save: ${error.message}` });
     }
 });
 
-
-// ROUTE 5: Get all courses for a user
 app.get('/my-courses', async (req, res) => {
-    // ... (This route is unchanged) ...
     const userId = req.query.userId;
-    if (!userId) {
-        return res.status(400).json({ status: 'error', message: 'User ID is required.' });
-    }
+    if (!userId) return res.status(400).json({ status: 'error', message: 'User ID required.' });
     try {
         const [courses] = await pool.execute(
-            `SELECT c.*, p.completed_resources 
-             FROM courses c
-             LEFT JOIN user_course_progress p ON c.id = p.course_id AND p.user_id = ?
-             WHERE c.user_id = ? 
-             ORDER BY c.created_at DESC`,
+            `SELECT c.*, p.completed_resources FROM courses c LEFT JOIN user_course_progress p ON c.id = p.course_id AND p.user_id = ? WHERE c.user_id = ? ORDER BY c.created_at DESC`,
             [userId, userId]
         );
         const parsedCourses = courses.map(course => {
@@ -303,97 +305,63 @@ app.get('/my-courses', async (req, res) => {
                 const parsedContent = JSON.parse(course.generated_content);
                 let completedResources = [];
                 if (course.completed_resources) {
-                    completedResources = typeof course.completed_resources === 'string' 
-                        ? JSON.parse(course.completed_resources) 
-                        : course.completed_resources;
+                    completedResources = typeof course.completed_resources === 'string' ? JSON.parse(course.completed_resources) : course.completed_resources;
                 }
                 return { ...course, generated_content: parsedContent, completed_resources: completedResources };
-            } catch (parseError) {
-                return { ...course, generated_content: { title: "Error: Could not load content" }, completed_resources: [] }; 
-            }
+            } catch (e) { return { ...course, generated_content: { title: "Error" }, completed_resources: [] }; }
         });
         res.json({ status: 'success', courses: parsedCourses });
     } catch (error) {
-        console.error("Error fetching my-courses:", error);
-        res.status(500).json({ status: 'error', message: `Failed to fetch courses: ${error.message}` });
+        res.status(500).json({ status: 'error', message: 'Failed to fetch courses.' });
     }
 });
 
-// ROUTE 6: Get course progress
 app.get('/api/course/:courseId/progress', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { courseId } = req.params;
     const { userId } = req.query;
-    if (!userId) return res.status(400).json({ status: 'error', message: 'User ID is required.' });
+    if (!userId) return res.status(400).json({ status: 'error', message: 'User ID required.' });
     try {
-        const [rows] = await pool.execute(
-            'SELECT completed_resources FROM user_course_progress WHERE user_id = ? AND course_id = ?',
-            [userId, courseId]
-        );
+        const [rows] = await pool.execute('SELECT completed_resources FROM user_course_progress WHERE user_id = ? AND course_id = ?', [userId, courseId]);
         res.json({ status: 'success', completed_resources: rows.length > 0 ? (rows[0].completed_resources || []) : [] });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to fetch course progress.' });
-    }
+    } catch (error) { res.status(500).json({ status: 'error', message: 'Failed to fetch progress.' }); }
 });
 
-// ROUTE 7: Update course progress
 app.post('/api/course/:courseId/progress', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { courseId } = req.params;
     const { userId, completed_resources } = req.body;
-    if (!userId || !Array.isArray(completed_resources)) {
-        return res.status(400).json({ status: 'error', message: 'Invalid data provided.' });
-    }
+    if (!userId || !Array.isArray(completed_resources)) return res.status(400).json({ status: 'error', message: 'Invalid data.' });
     const completedResourcesJson = JSON.stringify(completed_resources);
     try {
-        await pool.execute(
-            `INSERT INTO user_course_progress (user_id, course_id, completed_resources) VALUES (?, ?, ?)
-             ON DUPLICATE KEY UPDATE completed_resources = ?`,
-            [userId, courseId, completedResourcesJson, completedResourcesJson]
-        );
+        await pool.execute(`INSERT INTO user_course_progress (user_id, course_id, completed_resources) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE completed_resources = ?`, [userId, courseId, completedResourcesJson, completedResourcesJson]);
         res.json({ status: 'success', message: 'Progress saved.' });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Failed to save progress.' });
-    }
+    } catch (error) { res.status(500).json({ status: 'error', message: 'Failed to save progress.' }); }
 });
 
-
-// ROUTE 8: User Signup
 app.post('/signup', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { username, password, email } = req.body;
-    if (!username || !password) return res.status(400).json({ status: 'error', message: 'Username and password are required.' });
+    if (!username || !password) return res.status(400).json({ status: 'error', message: 'Required fields missing.' });
     try {
         const [existingUser] = await pool.execute(`SELECT id FROM users WHERE username = ?`, [username]);
-        if (existingUser.length > 0) return res.status(409).json({ status: 'error', message: 'Username already taken.' });
+        if (existingUser.length > 0) return res.status(409).json({ status: 'error', message: 'Username taken.' });
         const password_hash = await bcrypt.hash(password, 10);
         await pool.execute(`INSERT INTO users (username, password_hash, email) VALUES (?, ?, ?)`, [username, password_hash, email || null]);
-        res.status(201).json({ status: 'success', message: 'User registered successfully!' });
-    } catch (error) { 
-        console.error("Signup error:", error);
-        res.status(500).json({ status: 'error', message: `Sign-up failed: ${error.message}` });
-    }
+        res.status(201).json({ status: 'success', message: 'User registered!' });
+    } catch (error) { res.status(500).json({ status: 'error', message: 'Signup failed.' }); }
 });
 
-// ROUTE 9: User Login
 app.post('/login', async (req, res) => {
-    // ... (This route is unchanged) ...
     const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ status: 'error', message: 'Username and password are required.' });
+    if (!username || !password) return res.status(400).json({ status: 'error', message: 'Required fields missing.' });
     try {
         const [users] = await pool.execute(`SELECT id, username, password_hash FROM users WHERE username = ?`, [username]);
-        if (users.length === 0) return res.status(401).json({ status: 'error', message: 'Invalid username or password.' });
+        if (users.length === 0) return res.status(401).json({ status: 'error', message: 'Invalid credentials.' });
         const user = users[0];
         const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-        if (!isPasswordValid) return res.status(401).json({ status: 'error', message: 'Invalid username or password.' });
-        res.status(200).json({ status: 'success', message: 'Logged in successfully!', userId: user.id, username: user.username });
-    } catch (error) {
-        console.error("Login error:", error);
-        res.status(500).json({ status: 'error', message: `Login failed: ${error.message}` });
-    }
+        if (!isPasswordValid) return res.status(401).json({ status: 'error', message: 'Invalid credentials.' });
+        res.status(200).json({ status: 'success', message: 'Logged in!', userId: user.id, username: user.username });
+    } catch (error) { res.status(500).json({ status: 'error', message: 'Login failed.' }); }
 });
 
-// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
