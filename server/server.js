@@ -300,32 +300,37 @@ app.get('/my-courses', async (req, res) => {
             `SELECT c.*, p.completed_resources FROM courses c LEFT JOIN user_course_progress p ON c.id = p.course_id AND p.user_id = ? WHERE c.user_id = ? ORDER BY c.created_at DESC`,
             [userId, userId]
         );
+        
         const parsedCourses = courses.map(course => {
             try {
-                const parsedContent = JSON.parse(course.generated_content);
+                // --- FIX START ---
+                // Check if it's already an object (MySQL driver might have parsed it)
+                let parsedContent = course.generated_content;
+                if (typeof parsedContent === 'string') {
+                    parsedContent = JSON.parse(parsedContent);
+                }
+                // --- FIX END ---
+
                 let completedResources = [];
                 if (course.completed_resources) {
-                    completedResources = typeof course.completed_resources === 'string' ? JSON.parse(course.completed_resources) : course.completed_resources;
+                    // Same check for completed_resources
+                    completedResources = typeof course.completed_resources === 'string' 
+                        ? JSON.parse(course.completed_resources) 
+                        : course.completed_resources;
                 }
                 return { ...course, generated_content: parsedContent, completed_resources: completedResources };
-            } catch (e) { return { ...course, generated_content: { title: "Error" }, completed_resources: [] }; }
+            } catch (e) { 
+                console.error("Parsing error for course:", course.id, e); // Log the real error
+                return { ...course, generated_content: { title: "Error parsing content" }, completed_resources: [] }; 
+            }
         });
+        
         res.json({ status: 'success', courses: parsedCourses });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ status: 'error', message: 'Failed to fetch courses.' });
     }
 });
-
-app.get('/api/course/:courseId/progress', async (req, res) => {
-    const { courseId } = req.params;
-    const { userId } = req.query;
-    if (!userId) return res.status(400).json({ status: 'error', message: 'User ID required.' });
-    try {
-        const [rows] = await pool.execute('SELECT completed_resources FROM user_course_progress WHERE user_id = ? AND course_id = ?', [userId, courseId]);
-        res.json({ status: 'success', completed_resources: rows.length > 0 ? (rows[0].completed_resources || []) : [] });
-    } catch (error) { res.status(500).json({ status: 'error', message: 'Failed to fetch progress.' }); }
-});
-
 app.post('/api/course/:courseId/progress', async (req, res) => {
     const { courseId } = req.params;
     const { userId, completed_resources } = req.body;

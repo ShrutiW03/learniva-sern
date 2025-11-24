@@ -115,14 +115,15 @@ function QuizModal({ show, handleClose, courseId, courseTopic, defaultQuizType =
                 <option value="test">Comprehensive Test (10 Questions)</option>
               </Form.Select>
             </Form.Group>
-            <Form.Group className="mb-3" controlId="difficulty">
-              <Form.Label>Difficulty:</Form.Label>
-              <Form.Select value={quizOptions.difficulty} onChange={handleOptionsChange}>
-                <option value="Beginner">Beginner</option>
-                <option value="Intermediate">Intermediate</option>
-                <option value="Advanced">Advanced</option>
-              </Form.Select>
-            </Form.Group>
+            <Form.Group className="mb-3" controlId="quizType">
+  <Form.Label>Test Type:</Form.Label>
+  {/* Removed 'disabled' so users can choose */}
+  <Form.Select value={quizOptions.quizType} onChange={handleOptionsChange}>
+    <option value="quiz">Quick Quiz (5 Questions)</option>
+    <option value="test">Comprehensive Test (10 Questions)</option>
+    <option value="true_false">True / False Mode</option> {/* New Option */}
+  </Form.Select>
+</Form.Group>
           </Form>
         )}
         

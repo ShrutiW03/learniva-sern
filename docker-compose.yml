@@ -1,0 +1,58 @@
+
+
+services:
+  # 1. The Database Service (MySQL)
+  db:
+    image: mysql:8.0
+    container_name: learniva_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - learniva-network
+
+  # 2. The Backend API Service (Node.js/Express)
+  server:
+    build: ./server
+    container_name: learniva_server
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DB_HOST=db
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - db
+    networks:
+      - learniva-network
+
+  # 3. The Frontend Client Service (React/Nginx)
+  client:
+    build: ./client
+    container_name: learniva_client
+    restart: always
+    ports:
+      - "5173:80" # Maps your machine's 5173 to Nginx's internal 80
+    depends_on:
+      - server
+    networks:
+      - learniva-network
+
+volumes:
+  db_data:
+
+networks:
+  learniva-network:
+    driver: bridge
