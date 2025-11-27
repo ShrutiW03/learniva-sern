@@ -130,6 +130,7 @@ spec:
         }
         
     
+        // 5. Deploy to Kubernetes
         stage('Deploy Learniva App') {
             steps {
                 container('kubectl') {
@@ -137,12 +138,14 @@ spec:
                         sh '''
                             echo "--- ☸️ Deploying to Kubernetes ---"
                             
-                            # Apply all configs in the k8s folder
-                            # Using namespace 2401205 (Ensure this exists!)
+                            # ✅ NEW LINE: Create the namespace if it is missing
+                            # '|| true' ensures the pipeline continues if it already exists
+                            kubectl create namespace 2401205 || true
+
+                            # Apply all configs to that namespace
                             kubectl apply -f k8s/ -n 2401205
 
                             # Restart deployments to pick up the new images
-                            # These names (server, client) MUST match metadata.name in your YAML files
                             kubectl rollout restart deployment/server -n 2401205
                             kubectl rollout restart deployment/client -n 2401205
                             
@@ -154,5 +157,3 @@ spec:
                 }
             }
         }
-    }
-}
