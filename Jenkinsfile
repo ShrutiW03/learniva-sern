@@ -51,8 +51,8 @@ spec:
         // Define your Registry URL and Project Name here for easier updates
         NEXUS_URL = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
         PROJECT_NAME = '2401205_Learniva' // Keep your specific project folder
-        BACKEND_IMAGE = 'Learniva-backend'
-        FRONTEND_IMAGE = 'Learniva-frontend'
+        BACKEND_IMAGE = 'learniva-backend'
+        FRONTEND_IMAGE = 'learniva-frontend'
     }
 
     stages {
