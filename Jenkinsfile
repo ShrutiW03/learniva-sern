@@ -48,47 +48,48 @@ spec:
     }
     
     environment {
-        // Registry URL (Keep your specific lab/environment URL)
         NEXUS_URL = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
         
-        // Your Project Name (Keep your specific ID)
-        PROJECT_NAME = '2401205_Learniva'
+        // This matches the folder/tag in Nexus
+        PROJECT_NAME = '2401205_Learniva' 
         
-        // ✅ CHANGED: Match your server/client naming convention
+        // These match the names in your k8s/server.yaml and k8s/client.yaml
         BACKEND_IMAGE = 'learniva-server'
         FRONTEND_IMAGE = 'learniva-client'
+        // --------------------------------------------------------
     }
 
     stages {
-        // 1. Build the Docker Images
         stage('Build Docker Images') {
             steps {
                 container('dind') {
                     sh '''
-                        # Wait for Docker daemon
+                        echo "--- 🐳 Waiting for Docker Daemon ---"
                         sleep 5
                         
-                        echo "--- Building Backend Image ---"
-                        # ✅ Server is in ./server folder
+                        echo "--- 🔨 Building Backend Image (Server) ---"
+                        # Build from the 'server' folder
                         docker build -t ${BACKEND_IMAGE}:latest ./server
 
-                        echo "--- Building Frontend Image ---"
-                        # ✅ CHANGED: Frontend is in ./client folder (not root)
+                        echo "--- 🔨 Building Frontend Image (Client) ---"
+                        # Build from the 'client' folder
                         docker build -t ${FRONTEND_IMAGE}:latest ./client
                         
+                        echo "--- ✅ Images Built ---"
                         docker image ls
                     '''
                 }
             }
         }
 
-        // 2. Code Quality Check
+    
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                      // Ensure '2401205_Learniva' matches the ID inside Jenkins "Manage Credentials"
+                      // Ensure '2401205_Learniva' exists in Jenkins Credentials
                       withCredentials([string(credentialsId: '2401205_Learniva', variable: 'SONAR_TOKEN')]) {
                         sh '''
+                            echo "--- 🔍 Starting Code Analysis ---"
                             sonar-scanner \
                                 -Dsonar.projectKey=2401205_Learniva_key \
                                 -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
@@ -102,26 +103,25 @@ spec:
             }
         }
 
-        // 3. Login to Nexus
+    
         stage('Login to Docker Registry') {
             steps {
                 container('dind') {
-                    // Update password if you changed it from the default
                     sh "docker login ${NEXUS_URL} -u admin -p Changeme@2025"
                 }
             }
         }
 
-        // 4. Push Images to Nexus
+    
         stage('Tag & Push Images') {
             steps {
                 container('dind') {
                     sh '''
-                        # --- Handle Backend ---
+                        echo "--- 🚀 Pushing Backend to Nexus ---"
                         docker tag ${BACKEND_IMAGE}:latest ${NEXUS_URL}/${PROJECT_NAME}/${BACKEND_IMAGE}:latest
                         docker push ${NEXUS_URL}/${PROJECT_NAME}/${BACKEND_IMAGE}:latest
 
-                        # --- Handle Frontend ---
+                        echo "--- 🚀 Pushing Frontend to Nexus ---"
                         docker tag ${FRONTEND_IMAGE}:latest ${NEXUS_URL}/${PROJECT_NAME}/${FRONTEND_IMAGE}:latest
                         docker push ${NEXUS_URL}/${PROJECT_NAME}/${FRONTEND_IMAGE}:latest
                     '''
@@ -129,24 +129,24 @@ spec:
             }
         }
         
-        // 5. Deploy to Kubernetes
+    
         stage('Deploy Learniva App') {
             steps {
                 container('kubectl') {
                     script {
                         sh '''
+                            echo "--- ☸️ Deploying to Kubernetes ---"
+                            
                             # Apply all configs in the k8s folder
-                            # Using namespace 2401205 (Make sure this exists in your cluster!)
+                            # Using namespace 2401205 (Ensure this exists!)
                             kubectl apply -f k8s/ -n 2401205
 
-                            # ✅ CHANGED: Use correct deployment names from your YAML files
-                            # In k8s/server.yaml we named it "server"
+                            # Restart deployments to pick up the new images
+                            # These names (server, client) MUST match metadata.name in your YAML files
                             kubectl rollout restart deployment/server -n 2401205
-                            
-                            # In k8s/client.yaml we named it "client"
                             kubectl rollout restart deployment/client -n 2401205
                             
-                            # Verify success
+                            echo "--- ⏳ Waiting for Rollout ---"
                             kubectl rollout status deployment/server -n 2401205
                             kubectl rollout status deployment/client -n 2401205
                         '''
