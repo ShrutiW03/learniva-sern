@@ -48,11 +48,15 @@ spec:
     }
     
     environment {
-        // Define your Registry URL and Project Name here for easier updates
+        // Registry URL (Keep your specific lab/environment URL)
         NEXUS_URL = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
-        PROJECT_NAME = '2401205_Learniva' // Keep your specific project folder
-        BACKEND_IMAGE = 'learniva-backend'
-        FRONTEND_IMAGE = 'learniva-frontend'
+        
+        // Your Project Name (Keep your specific ID)
+        PROJECT_NAME = '2401205_Learniva'
+        
+        // ✅ CHANGED: Match your server/client naming convention
+        BACKEND_IMAGE = 'learniva-server'
+        FRONTEND_IMAGE = 'learniva-client'
     }
 
     stages {
@@ -65,12 +69,12 @@ spec:
                         sleep 5
                         
                         echo "--- Building Backend Image ---"
-                        # Assuming server code is in ./server folder
+                        # ✅ Server is in ./server folder
                         docker build -t ${BACKEND_IMAGE}:latest ./server
 
                         echo "--- Building Frontend Image ---"
-                        # Assuming frontend Dockerfile is in root (based on previous steps)
-                        docker build -t ${FRONTEND_IMAGE}:latest .
+                        # ✅ CHANGED: Frontend is in ./client folder (not root)
+                        docker build -t ${FRONTEND_IMAGE}:latest ./client
                         
                         docker image ls
                     '''
@@ -82,15 +86,15 @@ spec:
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                     // Ensure you use the correct credentials ID from your Jenkins
-                     withCredentials([string(credentialsId: '2401205_Learniva', variable: 'SONAR_TOKEN')]) {
+                      // Ensure '2401205_Learniva' matches the ID inside Jenkins "Manage Credentials"
+                      withCredentials([string(credentialsId: '2401205_Learniva', variable: 'SONAR_TOKEN')]) {
                         sh '''
                             sonar-scanner \
-                                -Dsonar.projectKey= 2401205_Learniva_key\
+                                -Dsonar.projectKey=2401205_Learniva_key \
                                 -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
                                 -Dsonar.login=$SONAR_TOKEN \
                                 -Dsonar.sources=. \
-                                -Dsonar.exclusions=*/node_modules/,/dist/,/coverage/* \
+                                -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/coverage/** \
                                 -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
                         '''
                     }
@@ -102,7 +106,7 @@ spec:
         stage('Login to Docker Registry') {
             steps {
                 container('dind') {
-                    // Update username/password if they are different
+                    // Update password if you changed it from the default
                     sh "docker login ${NEXUS_URL} -u admin -p Changeme@2025"
                 }
             }
@@ -126,23 +130,25 @@ spec:
         }
         
         // 5. Deploy to Kubernetes
-        stage('Deploy SwarSetu App') {
+        stage('Deploy Learniva App') {
             steps {
                 container('kubectl') {
                     script {
-                        // Assuming your K8s YAML files are in a folder named 'k8s'
-                        // or listing specific files if they are in root
                         sh '''
-                            # Apply Database, Backend, and Frontend
+                            # Apply all configs in the k8s folder
+                            # Using namespace 2401205 (Make sure this exists in your cluster!)
                             kubectl apply -f k8s/ -n 2401205
 
-                            # Force restart to pick up new images
-                            kubectl rollout restart deployment/backend-deployment -n 2401205
-                            kubectl rollout restart deployment/frontend-deployment -n 2401205
+                            # ✅ CHANGED: Use correct deployment names from your YAML files
+                            # In k8s/server.yaml we named it "server"
+                            kubectl rollout restart deployment/server -n 2401205
                             
-                            # Wait for rollout to verify success
-                            kubectl rollout status deployment/backend-deployment -n 2401205
-                            kubectl rollout status deployment/frontend-deployment -n 2401205
+                            # In k8s/client.yaml we named it "client"
+                            kubectl rollout restart deployment/client -n 2401205
+                            
+                            # Verify success
+                            kubectl rollout status deployment/server -n 2401205
+                            kubectl rollout status deployment/client -n 2401205
                         '''
                     }
                 }
