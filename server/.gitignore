@@ -10,3 +10,7 @@ node_modules/
 *.log
 
 k8s/secrets.yaml
+
+k8s/secrets.yaml
+secrets.yaml
+.env
