@@ -8,3 +8,5 @@ node_modules/
 
 # Log files
 *.log
+
+k8s/secrets.yaml

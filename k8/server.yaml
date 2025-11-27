@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+      - name: server
+        # IMPORTANT: You must build this image first (see instructions below)
+        image: learniva-server:latest 
+        imagePullPolicy: Never # Use the local image from Docker Desktop
+        ports:
+        - containerPort: 3000
+        env:
+        - name: PORT
+          value: "3000"
+        - name: DB_HOST
+          value: "mysql-service" # Matches the Service name in mysql.yaml
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: mysql-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: mysql-password
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: mysql-database
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: openrouter-api-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-service
+spec:
+  selector:
+    app: server
+  ports:
+  - port: 3000
+    targetPort: 3000
+  type: LoadBalancer # Exposes to localhost:3000

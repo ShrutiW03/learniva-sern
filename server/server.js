@@ -205,7 +205,7 @@ app.post('/api/course/:courseId/quiz', async (req, res) => {
     
     try {
         const completion = await openrouter.chat.completions.create({
-            model: "mistralai/mistral-7b-instruct:free", 
+            model: "google/gemini-2.0-flash-lite-preview-02-05:free", 
             messages: [
                 { role: "system", content: "You are a quiz generator. You MUST respond with ONLY the valid JSON object requested. Do not add any introductory text, conversation, or markdown ticks. Your response must start with { and end with }." },
                 { role: "user", content: prompt }
