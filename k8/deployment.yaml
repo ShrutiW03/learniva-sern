@@ -225,13 +225,13 @@ spec:
 ---
 
 # 5. INGRESS
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: learniva-ingress
   namespace: "2401205"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  # ❌ DELETED: annotations section is gone
 spec:
   ingressClassName: nginx
   rules:
