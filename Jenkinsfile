@@ -148,7 +148,7 @@ spec:
                             kubectl create namespace 2401205 || true
 
                             # Apply all configs to that namespace
-                            kubectl apply -f k8s/ -n 2401205
+                            kubectl apply -f k8/ -n 2401205
 
                             # Restart deployments to pick up the new images
                             kubectl rollout restart deployment/server -n 2401205
