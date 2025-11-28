@@ -51,7 +51,7 @@ spec:
         NEXUS_URL = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
         
         // This matches the folder/tag in Nexus
-        PROJECT_NAME = '2401205_Learniva' 
+        PROJECT_NAME = '2401205_learniva' 
         
         // These match the names in your k8s/server.yaml and k8s/client.yaml
         BACKEND_IMAGE = 'learniva-server'
