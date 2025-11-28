@@ -1,60 +1,60 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: server
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: server
-  template:
-    metadata:
-      labels:
-        app: server
-    spec:
-      containers:
-      - name: server
-        # 👇 CHANGE THIS to the full Nexus URL
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-server:latest
-        # 👇 CHANGE THIS to allow downloading
-        imagePullPolicy: Always 
-        ports:
-        - containerPort: 3000
-        # ... (keep env variables the same)
-        env:
-        - name: PORT
-          value: "3000"
-        - name: DB_HOST
-          value: "mysql-service" # Matches the Service name in mysql.yaml
-        - name: DB_USER
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-user
-        - name: DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-password
-        - name: DB_NAME
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-database
-        - name: OPENROUTER_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: openrouter-api-key
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: server-service
-spec:
-  selector:
-    app: server
-  ports:
-  - port: 3000
-    targetPort: 3000
-  type: LoadBalancer # Exposes to localhost:3000
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: server
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: server
+#   template:
+#     metadata:
+#       labels:
+#         app: server
+#     spec:
+#       containers:
+#       - name: server
+#         # 👇 CHANGE THIS to the full Nexus URL
+#         image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-server:latest
+#         # 👇 CHANGE THIS to allow downloading
+#         imagePullPolicy: Always 
+#         ports:
+#         - containerPort: 3000
+#         # ... (keep env variables the same)
+#         env:
+#         - name: PORT
+#           value: "3000"
+#         - name: DB_HOST
+#           value: "mysql-service" # Matches the Service name in mysql.yaml
+#         - name: DB_USER
+#           valueFrom:
+#             secretKeyRef:
+#               name: learniva-secrets
+#               key: mysql-user
+#         - name: DB_PASSWORD
+#           valueFrom:
+#             secretKeyRef:
+#               name: learniva-secrets
+#               key: mysql-password
+#         - name: DB_NAME
+#           valueFrom:
+#             secretKeyRef:
+#               name: learniva-secrets
+#               key: mysql-database
+#         - name: OPENROUTER_API_KEY
+#           valueFrom:
+#             secretKeyRef:
+#               name: learniva-secrets
+#               key: openrouter-api-key
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: server-service
+# spec:
+#   selector:
+#     app: server
+#   ports:
+#   - port: 3000
+#     targetPort: 3000
+#   type: LoadBalancer # Exposes to localhost:3000
