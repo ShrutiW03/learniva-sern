@@ -150,13 +150,6 @@ spec:
                             # Apply all configs to that namespace
                             kubectl apply -f k8/ -n 2401205
 
-                            # Restart deployments to pick up the new images
-                            kubectl rollout restart deployment/server -n 2401205
-                            kubectl rollout restart deployment/client -n 2401205
-                            
-                            echo "--- ⏳ Waiting for Rollout ---"
-                            kubectl rollout status deployment/server -n 2401205
-                            kubectl rollout status deployment/client -n 2401205
                         '''
                     }
                 }
