@@ -14,8 +14,10 @@ spec:
     spec:
       containers:
       - name: client
-        image: learniva-client:latest
-        imagePullPolicy: Never
+        # 👇 CHANGE THIS
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-client:latest
+        # 👇 CHANGE THIS
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---

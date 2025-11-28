@@ -14,11 +14,13 @@ spec:
     spec:
       containers:
       - name: server
-        # IMPORTANT: You must build this image first (see instructions below)
-        image: learniva-server:latest 
-        imagePullPolicy: Never # Use the local image from Docker Desktop
+        # 👇 CHANGE THIS to the full Nexus URL
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-server:latest
+        # 👇 CHANGE THIS to allow downloading
+        imagePullPolicy: Always 
         ports:
         - containerPort: 3000
+        # ... (keep env variables the same)
         env:
         - name: PORT
           value: "3000"
