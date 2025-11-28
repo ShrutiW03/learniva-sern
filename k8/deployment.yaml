@@ -1,13 +1,11 @@
-
-# This ConfigMap tells the database how to create your tables automatically.
-# You do NOT need to run SQL commands manually.
+# 1. CONFIGMAP (Database Scripts)
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mysql-init-scripts
   namespace: "2401205"
 data:
-  init.sql: 
+  init.sql: |
     CREATE DATABASE IF NOT EXISTS learniva_db;
     USE learniva_db;
 
@@ -58,6 +56,7 @@ data:
 
 ---
 
+# 2. DATABASE DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -100,7 +99,6 @@ spec:
         - containerPort: 3306
           name: mysql
         volumeMounts:
-        # This line connects the script above to the database container
         - name: mysql-initdb
           mountPath: /docker-entrypoint-initdb.d
       volumes:
@@ -123,6 +121,7 @@ spec:
 
 ---
 
+# 3. SERVER DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -140,15 +139,14 @@ spec:
     spec:
       containers:
       - name: server
-        # Ensure this matches your Jenkins image URL
-        image: image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/learniva-server:latest
+        # FIXED: Removed double "image:" and cleaned the URL
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-server:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:
         - name: PORT
           value: "3000"
-        # ✅ CONNECTS TO THE LOCAL CLUSTER DB
         - name: DB_HOST
           value: "mysql-service"
         - name: DB_USER
@@ -187,6 +185,7 @@ spec:
 
 ---
 
+# 4. CLIENT DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -225,13 +224,11 @@ spec:
 ---
 
 # 5. INGRESS
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: learniva-ingress
   namespace: "2401205"
-  # ❌ DELETED: annotations section is gone
 spec:
   ingressClassName: nginx
   rules:
