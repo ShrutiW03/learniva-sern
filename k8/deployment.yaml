@@ -140,7 +140,7 @@ spec:
       containers:
       - name: server
         # FIXED: Removed double "image:" and cleaned the URL
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-server:latest
+        image: image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/learniva-server:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
