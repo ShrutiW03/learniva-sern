@@ -1,62 +1,4 @@
-# 1. CONFIGMAP (Database Scripts)
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: mysql-init-scripts
-  namespace: "2401205"
-data:
-  init.sql: |
-    CREATE DATABASE IF NOT EXISTS learniva_db;
-    USE learniva_db;
-
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        email VARCHAR(255),
-        password_hash VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS courses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        topic VARCHAR(255) NOT NULL,
-        duration INT,
-        skill_level VARCHAR(50),
-        learning_goals TEXT,
-        generated_content JSON,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS user_course_progress (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        course_id INT NOT NULL,
-        completed_resources JSON,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_progress (user_id, course_id),
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS userquizresults (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT NOT NULL,
-        course_id INT NOT NULL,
-        topic VARCHAR(255),
-        score INT,
-        total_questions INT,
-        difficulty VARCHAR(50),
-        quiz_type VARCHAR(50),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
-    );
-
----
-
-# 2. DATABASE DEPLOYMENT & SERVICE
+# 1. DATABASE DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -98,13 +40,7 @@ spec:
         ports:
         - containerPort: 3306
           name: mysql
-        volumeMounts:
-        - name: mysql-initdb
-          mountPath: /docker-entrypoint-initdb.d
-      volumes:
-      - name: mysql-initdb
-        configMap:
-          name: mysql-init-scripts
+        # REMOVED: volumeMounts for init scripts
 ---
 apiVersion: v1
 kind: Service
@@ -121,7 +57,7 @@ spec:
 
 ---
 
-# 3. SERVER DEPLOYMENT & SERVICE
+# 2. SERVER DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -139,7 +75,7 @@ spec:
     spec:
       containers:
       - name: server
-        # FIXED: Removed double "image:" and cleaned the URL
+        # FIXED: Cleaned up the URL and removed double 'image:'
         image: image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/learniva-server:latest
         imagePullPolicy: Always
         ports:
@@ -185,7 +121,7 @@ spec:
 
 ---
 
-# 4. CLIENT DEPLOYMENT & SERVICE
+# 3. CLIENT DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -203,7 +139,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-client:latest
+        image: image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/learniva-client:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -223,7 +159,7 @@ spec:
 
 ---
 
-# 5. INGRESS
+# 4. INGRESS
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

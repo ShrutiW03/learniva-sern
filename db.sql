@@ -1,0 +1,52 @@
+-- -- Create the database if it doesn't exist
+-- CREATE DATABASE IF NOT EXISTS learniva_db;
+-- USE learniva_db;
+
+-- -- 1. Users Table
+-- CREATE TABLE IF NOT EXISTS users (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     username VARCHAR(255) NOT NULL UNIQUE,
+--     email VARCHAR(255),
+--     password_hash VARCHAR(255) NOT NULL,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- );
+
+-- -- 2. Courses Table
+-- CREATE TABLE IF NOT EXISTS courses (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     user_id INT NOT NULL,
+--     topic VARCHAR(255) NOT NULL,
+--     duration INT,
+--     skill_level VARCHAR(50),
+--     learning_goals TEXT,
+--     generated_content JSON,
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+-- );
+
+-- -- 3. Course Progress Table
+-- CREATE TABLE IF NOT EXISTS user_course_progress (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     user_id INT NOT NULL,
+--     course_id INT NOT NULL,
+--     completed_resources JSON,
+--     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+--     UNIQUE KEY unique_progress (user_id, course_id),
+--     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+--     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+-- );
+
+-- -- 4. Quiz Results Table
+-- CREATE TABLE IF NOT EXISTS userquizresults (
+--     id INT AUTO_INCREMENT PRIMARY KEY,
+--     user_id INT NOT NULL,
+--     course_id INT NOT NULL,
+--     topic VARCHAR(255),
+--     score INT,
+--     total_questions INT,
+--     difficulty VARCHAR(50),
+--     quiz_type VARCHAR(50),
+--     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+--     FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+-- );
