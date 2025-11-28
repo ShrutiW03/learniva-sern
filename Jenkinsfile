@@ -143,9 +143,6 @@ spec:
                         sh '''
                             echo "--- ☸️ Deploying to Kubernetes ---"
                             
-                            # ✅ NEW LINE: Create the namespace if it is missing
-                            # '|| true' ensures the pipeline continues if it already exists
-                            kubectl create namespace 2401205 || true
 
                             # Apply all configs to that namespace
                             kubectl apply -f k8/ -n 2401205
