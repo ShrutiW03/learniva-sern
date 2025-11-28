@@ -244,4 +244,4 @@ spec:
               service:
                 name: client-service
                 port:
-                  number: 5173
+                  number: 3000
