@@ -1,62 +1,4 @@
-# 1. DATABASE DEPLOYMENT & SERVICE
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mysql
-  namespace: "2401205"
-spec:
-  selector:
-    matchLabels:
-      app: mysql
-  template:
-    metadata:
-      labels:
-        app: mysql
-    spec:
-      containers:
-      - name: mysql
-        image: mysql:8.0
-        env:
-        - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-root-password
-        - name: MYSQL_DATABASE
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-database
-        - name: MYSQL_USER
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-user
-        - name: MYSQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: learniva-secrets
-              key: mysql-password
-        ports:
-        - containerPort: 3306
-          name: mysql
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-  namespace: "2401205"
-spec:
-  selector:
-    app: mysql
-  ports:
-  - port: 3306
-    targetPort: 3306
-  type: ClusterIP
-
----
-
-# 2. SERVER DEPLOYMENT & SERVICE
+# 1. SERVER DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,16 +16,27 @@ spec:
     spec:
       containers:
       - name: server
-        # ✅ UPDATED: Using the 'text-emotion-detection' image from Nexus
-        image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/text-emotion-detection:latest
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/text-emotion-detection:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
         env:
         - name: PORT
           value: "3000"
+        
+        # ✅ UPDATED: Reads HOST and PORT from your secrets now
         - name: DB_HOST
-          value: "mysql-service"
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: learniva-secrets
+              key: DB_PORT
+        
+        # Database Credentials
         - name: DB_USER
           valueFrom:
             secretKeyRef:
@@ -120,7 +73,7 @@ spec:
 
 ---
 
-# 3. CLIENT DEPLOYMENT & SERVICE
+# 2. CLIENT DEPLOYMENT & SERVICE
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -138,7 +91,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: 127.0.0.1:30085/2401096-project/text-emotion-detection:latest/2401205_learniva/learniva-client:latest
+        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-client:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -158,7 +111,7 @@ spec:
 
 ---
 
-# 4. INGRESS
+# 3. INGRESS
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
