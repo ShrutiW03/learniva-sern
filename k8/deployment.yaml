@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/text-emotion-detection:latest
+        image: 127.0.0.1:30085/2401205_learniva/text-emotion-detection:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 3000
@@ -91,7 +91,7 @@ spec:
     spec:
       containers:
       - name: client
-        image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401205_learniva/learniva-client:latest
+        image: 127.0.0.1:30085/2401205_learniva/learniva-client:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80
