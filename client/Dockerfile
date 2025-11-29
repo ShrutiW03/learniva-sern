@@ -2,8 +2,15 @@
     FROM node:20-alpine as build
 
     WORKDIR /app
+
+    
     
     COPY package*.json ./
+
+    # ⬇️ ADDED: Fix for "ETIMEDOUT" errors ⬇️
+# This makes npm wait longer before failing due to slow internet
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
     RUN npm install
     
     COPY . .
@@ -24,3 +31,5 @@
     EXPOSE 80
     
     CMD ["nginx", "-g", "daemon off;"]
+
+    

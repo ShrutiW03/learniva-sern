@@ -18,3 +18,15 @@ EXPOSE 3000
 
 # Command to run the app
 CMD ["npm", "start"]
+
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+
+# ✅ ADDED: Increase network timeout settings
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
+
+RUN npm install
+COPY . .
+CMD ["node", "index.js"]
